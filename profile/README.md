@@ -4,7 +4,7 @@
 
 The DIMS Dashboard integrates audiovisual, kinematic, neural, and transcript data in one space — time series, video, transcripts, and analyses like RQA, cross-wavelet, and ELAN annotations — so qualitative and quantitative analyses of social interaction can sit side by side.
 
-🌐 **Landing page & network diagram → [dims-network.github.io](https://dims-network.github.io/)**
+🌐 **Landing page → [dims-network.github.io](https://dims-network.github.io/)**
 
 ---
 
