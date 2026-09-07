@@ -45,9 +45,14 @@ jobs:
         if: steps.vis.outputs.visibility == 'private'
         run: |
           allow=$(python -c "import json;print(' '.join(json.load(open('dims-case.json')).get('publishable') or []))")
+          # Prefer the study's own list, so this rule lives in one place rather
+          # than here and in the commit hook, disagreeing quietly.
+          globs=$(python -c "import json;print(' '.join(json.load(open('dims-case.json')).get('restricted') or []))")
+          [ -z "$globs" ] && globs="${{ inputs.restricted_globs }}"
           echo "allowlist: ${allow:-<empty>}"
+          echo "restricted: $globs"
           fail=0
-          for g in ${{ inputs.restricted_globs }}; do
+          for g in $globs; do
             while read -r f; do
               [ -z "$f" ] && continue
               ok=0
