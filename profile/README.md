@@ -1,45 +1,70 @@
 # DIMS-network
 
-**Open tools for visualizing dynamic interaction and multimodal signals in social-interaction research.**
+**Open tools for exploring dynamic interaction and multimodal signals in
+social-interaction research.**
 
-The DIMS Dashboard integrates audiovisual, kinematic, neural, and transcript data in one space — time series, video, transcripts, and analyses like RQA, cross-wavelet, and ELAN annotations — so qualitative and quantitative analyses of social interaction can sit side by side.
+A DIMS dashboard puts video, time series, transcripts and annotations in one
+place, against one shared clock, so that qualitative and quantitative readings
+of an interaction can sit beside each other — recurrence quantification,
+cross-wavelet coherence and ELAN annotations included.
 
-🌐 **Landing page → [dims-network.github.io](https://dims-network.github.io/)**
-
----
-
-## Repositories
-
-| Repo | Role | Stack | Live |
-|---|---|---|---|
-| [**DIMS_Dashboard**](https://github.com/dims-network/DIMS_Dashboard) | Canonical base dashboard | Static · JS | [demo](https://dims-network.github.io/DIMS_Dashboard/) |
-| [**DIMS_dashboard_template**](https://github.com/dims-network/DIMS_dashboard_template) | Empty "Use this template" starter | Static · JS | — |
-| [**DIMS_Dashboard_Ortho**](https://github.com/dims-network/DIMS_Dashboard_Ortho) | ORTHO study — fork of the base (multi-perspective video, trajectory, DTW) | Static · JS | [demo](https://dims-network.github.io/DIMS_Dashboard_Ortho/) |
-| [**bots-viewer**](https://github.com/dims-network/bots-viewer) | Trajectory + RQA/cRQA viewer for a 2-player grid game | Python · Dash | [demo](https://huggingface.co/spaces/mikub97/bots-viewer) |
-| [**Ortho-viewer**](https://github.com/dims-network/Ortho-viewer) | ORTHO Game Browser — fork of bots-viewer | Python · Dash | — |
-
-## How the repos relate
-
-```mermaid
-flowchart TD
-  subgraph WEB["Static dashboards · GitHub Pages"]
-    root["DIMS_Dashboard<br/><i>base</i>"]
-    tmpl["DIMS_dashboard_template<br/><i>template</i>"]
-    ortho["DIMS_Dashboard_Ortho<br/><i>ORTHO study</i>"]
-  end
-  subgraph PY["Python / Dash viewers"]
-    bots["bots-viewer<br/><i>base</i>"]
-    oview["Ortho-viewer<br/><i>ORTHO Game Browser</i>"]
-  end
-  root -- fork --> ortho
-  root -. template .-> tmpl
-  bots -- fork --> oview
-```
+🌐 **[dims-network.github.io](https://dims-network.github.io/)** ·
+📘 **[Documentation](https://dims-network.github.io/docs/)** ·
+🚀 **[Getting started](https://dims-network.github.io/docs/getting-started.html)**
 
 ---
+
+## How it is organised
+
+One repository holds all the code. Each study is a small repository of its own,
+holding its configuration, its data, and a **pinned copy** of that code —
+verified against the release in CI, so a study can never quietly fork.
+
+| | | |
+|---|---|---|
+| [**dims**](https://github.com/dims-network/dims) | the core — dashboard, tabs, Python analyses, no-code builder | everything else pins a release of this |
+| [**case-demo**](https://github.com/dims-network/case-demo) | the reference study, with real data | [live](https://dims-network.github.io/case-demo/) |
+| [**case-ortho**](https://github.com/dims-network/case-ortho) | ORTHO — a two-person tabletop game | [live](https://dims-network.github.io/case-ortho/) |
+| **case-karnatak** | Karnatak music lessons | private: the recordings are identifiable |
+| [**dims-network.github.io**](https://github.com/dims-network/dims-network.github.io) | the site, generated from the core's markdown | |
+
+Separately, [**bots-viewer**](https://github.com/dims-network/bots-viewer) and
+[**Ortho-viewer**](https://github.com/dims-network/Ortho-viewer) are Dash
+applications for browsing many game sessions at once. They are not dashboards
+and do not pin the core.
+
+## Why it looks like this
+
+The code used to live in five repositories kept in step by hand. They were not:
+three disjoint git lineages, four copies of the frontend between 2136 and 2500
+lines, and **no repository that contained every feature**. One fork carried the
+only correct wavelet coherence for months while the others shipped a version
+that tracked signal power instead — because there was no mechanism for a fix to
+travel.
+
+Propagation is now a version bump. The earlier repositories are archived and
+kept read-only for provenance.
+
+## Working with human-subject data
+
+Much of this data is video of identifiable people. A study declares its
+visibility once, in `dims-case.json`, and the declaration is enforced by
+machinery rather than by memory: a commit hook, a push hook, and a CI check that
+fails if restricted data is tracked — or if a study declaring itself private is
+in a public repository. See
+[public and private data](https://dims-network.github.io/docs/data-visibility.html).
+
+## Contributing
+
+Issues labelled **`agent-ready`** name the files, link the contract and state
+the acceptance check. Both human and automated contributors are welcome to take
+them. Start from
+[the core's README](https://github.com/dims-network/dims#working-on-dims), a map
+telling you which single document to read for the task you have.
 
 ## Reference
 
-Miao, G. Q., Trujillo, J., Bulls, L. S., Thornton, M. A., Dale, R., & Pouw, W. (2025).
-*DIMS Dashboard for Exploring Dynamic Interactions and Multimodal Signals.*
-Proceedings of the 47th Annual Meeting of the Cognitive Science Society (CogSci 2025).
+Miao, G. Q., Trujillo, J., Bulls, L. S., Thornton, M. A., Dale, R., & Pouw, W.
+(2025). *DIMS Dashboard for Exploring Dynamic Interactions and Multimodal
+Signals.* Proceedings of the 47th Annual Meeting of the Cognitive Science
+Society (CogSci 2025).
