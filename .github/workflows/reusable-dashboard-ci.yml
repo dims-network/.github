@@ -8,13 +8,19 @@ on:
   workflow_call:
     inputs:
       python_paths:
-        description: Space-separated directories of Python to syntax-check.
+        description: >
+          Space-separated files or directories of Python to syntax-check.
+          Non-existent entries are skipped, so one default can cover studies
+          that have opt/ or tools/ and studies that do not.
         type: string
-        default: "opt"
+        default: "build_assets.py opt tools"
       js_glob:
-        description: Glob of JavaScript to syntax-check.
+        description: >
+          Glob of JavaScript to syntax-check. Vendored code is deliberately
+          absent: it is verified byte-for-byte against the release, so
+          syntax-checking it tests the release rather than this repository.
         type: string
-        default: "js/*.js"
+        default: "tabs/*.js"
       config_path:
         description: config.json to validate, or "" to skip.
         type: string
@@ -40,18 +46,35 @@ jobs:
         with:
           python-version: "3.11"
 
+      # `|| true` used to be on the end of this, which made the check
+      # structurally incapable of failing: a study's build_assets.py could not
+      # be broken badly enough to turn CI red. Missing paths are skipped
+      # explicitly instead, which is the case that trailing `|| true` was
+      # there to swallow.
       - name: Python syntax
         run: |
-          for d in ${{ inputs.python_paths }}; do
-            [ -d "$d" ] && python -m compileall -q "$d" || true
+          checked=0
+          fail=0
+          for p in ${{ inputs.python_paths }}; do
+            if [ ! -e "$p" ]; then
+              echo "  (no $p in this repository)"
+              continue
+            fi
+            echo "  checking $p"
+            python -m compileall -q "$p" || fail=1
+            checked=$((checked + 1))
           done
+          if [ "$checked" -eq 0 ]; then
+            echo "no Python to check"
+          fi
+          exit $fail
 
       - name: JavaScript syntax
         run: |
           shopt -s nullglob
           files=(${{ inputs.js_glob }})
           if [ ${#files[@]} -eq 0 ]; then echo "no JS matched — skipping"; exit 0; fi
-          for f in "${files[@]}"; do node --check "$f"; done
+          for f in "${files[@]}"; do echo "  checking $f"; node --check "$f"; done
 
       - name: Validate config.json
         if: inputs.config_path != ''
