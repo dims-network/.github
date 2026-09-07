@@ -91,6 +91,32 @@ jobs:
               # purpose, and this job cannot tell that from a genuine omission.
               for p in missing[:20]:
                   print(f"::warning::config names a file that is not in the repo: {p}")
+
+          # Any other filename the config mentions. This is general on purpose:
+          # an ORTHO study spent months with a blank trajectory background
+          # because config.json still named path1.png after the file had been
+          # renamed to path1_noend.png, and nothing looked.
+          MEDIA = (".png", ".jpg", ".jpeg", ".svg", ".mp4", ".eaf", ".csv")
+          def walk(node):
+              if isinstance(node, dict):
+                  for v in node.values():
+                      yield from walk(v)
+              elif isinstance(node, list):
+                  for v in node:
+                      yield from walk(v)
+              elif isinstance(node, str):
+                  yield node
+          named = {v for v in walk(cfg) if v.lower().endswith(MEDIA)}
+          for name in sorted(named):
+              if os.path.exists(name):
+                  continue
+              # bare filenames are looked up anywhere under assets/
+              hits = []
+              for root, _dirs, files in os.walk("assets"):
+                  if os.path.basename(name) in files:
+                      hits.append(os.path.join(root, os.path.basename(name)))
+              if not hits:
+                  print(f"::warning::config names '{name}', which is not in the repo")
           PY
 
       - name: Large file guard
