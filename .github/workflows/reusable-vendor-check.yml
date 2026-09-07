@@ -1,14 +1,25 @@
-# A case repo pins a core version and vendors it. This proves the vendored bytes
-# are exactly that release, so hand-editing vendored code is a red X rather than
-# a silent fork -- which is the failure this whole architecture exists to prevent.
+# A case repo pins a core version and vendors a copy of it. This proves the
+# vendored bytes are exactly that release, so hand-editing vendored code is a
+# red X rather than a silent fork -- the failure this architecture exists to
+# prevent.
+#
+# `dims-case check` on its own compares vendor/ against the hashes written in
+# the study's dims-case.json. That catches an edit, but both sides of it live
+# in the study, so a vendor/ copied from a modified core agrees with itself.
+# Only the release can settle it, which is why this job fetches the pinned tag
+# and runs *that release's* copy of the command with --release: it rebuilds
+# vendor/ from the release and compares against that.
+#
+# The comparison deliberately is not written here. It lives in dims_case.core,
+# where the copy rules it has to match (skip test/, node_modules/, *.md) also
+# live and are covered by tests. A `diff -r` in this file would have to repeat
+# those rules and would drift from them -- the exact class of bug this project
+# keeps finding.
 name: Reusable — vendored core integrity
 
 on:
   workflow_call:
     inputs:
-      vendor_dir:
-        type: string
-        default: "vendor/dims-core"
       core_repo:
         type: string
         default: "dims-network/dims"
@@ -18,23 +29,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Read the pinned version
-        id: pin
+      - name: Fetch the release this study pins
         run: |
           v=$(python -c "import json;print(json.load(open('dims-case.json'))['dimsCore'])")
           echo "pinned core: $v"
-          echo "version=$v" >> "$GITHUB_OUTPUT"
+          git clone -q --depth 1 --branch "v$v" \
+            "https://github.com/${{ inputs.core_repo }}.git" /tmp/core \
+            || { echo "::error::${{ inputs.core_repo }} has no tag v$v. A study may only pin a released core."; exit 1; }
 
-      - name: Fetch that release
-        run: |
-          git clone -q --depth 1 --branch "v${{ steps.pin.outputs.version }}" \
-            "https://github.com/${{ inputs.core_repo }}.git" /tmp/core
-
-      - name: Compare
-        run: |
-          diff -r --brief /tmp/core/packages/dims-core "${{ inputs.vendor_dir }}" && {
-            echo "vendored core matches v${{ steps.pin.outputs.version }} exactly"; exit 0; }
-          echo "::error::${{ inputs.vendor_dir }} does not match dims-core v${{ steps.pin.outputs.version }}."
-          echo "::error::Never edit vendored code. Fix it in ${{ inputs.core_repo }} and bump dimsCore."
-          exit 1
+      - name: Vendored core is that release, byte for byte
+        run: python /tmp/core/tools/dims-case check . --release
