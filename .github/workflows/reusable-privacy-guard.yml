@@ -1,0 +1,63 @@
+# Enforces docs/contracts/data-visibility.md on the server side.
+#
+# The hooks in a case repo stop data before it is committed, but hooks are local
+# and can be bypassed with --no-verify. This is the net that cannot be.
+name: Reusable — privacy guard
+
+on:
+  workflow_call:
+    inputs:
+      restricted_globs:
+        description: Paths that must never be tracked in a private case.
+        type: string
+        default: "assets/videos assets/timeseries assets/transcripts assets/elan assets/motion_tracking"
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Read the declared visibility
+        id: vis
+        run: |
+          if [ ! -f dims-case.json ]; then
+            echo "no dims-case.json — not a case repo, nothing to enforce"
+            echo "visibility=none" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          v=$(python -c "import json;print(json.load(open('dims-case.json')).get('visibility',''))")
+          echo "declared visibility: $v"
+          echo "visibility=$v" >> "$GITHUB_OUTPUT"
+
+      # The check nobody plans for: the declaration says private, but somebody
+      # made the repository public months later.
+      - name: Declared visibility must match the repository
+        if: steps.vis.outputs.visibility == 'private'
+        run: |
+          if [ "${{ github.event.repository.private }}" != "true" ]; then
+            echo "::error::dims-case.json declares visibility 'private' but this repository is PUBLIC."
+            echo "::error::Either make the repository private, or complete the go-public checklist in docs/contracts/data-visibility.md."
+            exit 1
+          fi
+          echo "repository is private, as declared"
+
+      - name: No restricted data may be tracked
+        if: steps.vis.outputs.visibility == 'private'
+        run: |
+          allow=$(python -c "import json;print(' '.join(json.load(open('dims-case.json')).get('publishable') or []))")
+          echo "allowlist: ${allow:-<empty>}"
+          fail=0
+          for g in ${{ inputs.restricted_globs }}; do
+            while read -r f; do
+              [ -z "$f" ] && continue
+              ok=0
+              for a in $allow; do case "$f" in "$a"*) ok=1;; esac; done
+              # A manifest carries names and checksums, never content.
+              case "$f" in */MANIFEST.json|*.gitkeep) ok=1;; esac
+              if [ "$ok" -eq 0 ]; then
+                echo "::error file=$f::restricted data is tracked in a private case. Remove it from git history, not just from HEAD."
+                fail=1
+              fi
+            done < <(git ls-files "$g")
+          done
+          exit $fail

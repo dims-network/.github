@@ -1,0 +1,44 @@
+# One copy of the Pages deploy for every DIMS dashboard.
+#
+# Replaces five hand-maintained copies of static.yml which had already drifted:
+# two of them were missing the `enablement` block, which is what makes the very
+# first run succeed instead of failing with "Get Pages site failed ... Not Found".
+name: Reusable — deploy to Pages
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: Directory to publish.
+        type: string
+        default: "."
+      enablement:
+        description: Create the Pages site if it does not exist yet.
+        type: boolean
+        default: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # Fail here, with a clear message, rather than publishing an empty site.
+      - name: Check there is something to publish
+        run: |
+          if [ ! -f "${{ inputs.path }}/index.html" ]; then
+            echo "::error::No index.html in '${{ inputs.path }}' — nothing to publish."
+            exit 1
+          fi
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: ${{ inputs.enablement }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ inputs.path }}
+      - id: deployment
+        uses: actions/deploy-pages@v4
