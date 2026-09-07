@@ -1,0 +1,40 @@
+# A case repo pins a core version and vendors it. This proves the vendored bytes
+# are exactly that release, so hand-editing vendored code is a red X rather than
+# a silent fork -- which is the failure this whole architecture exists to prevent.
+name: Reusable — vendored core integrity
+
+on:
+  workflow_call:
+    inputs:
+      vendor_dir:
+        type: string
+        default: "vendor/dims-core"
+      core_repo:
+        type: string
+        default: "dims-network/dims"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Read the pinned version
+        id: pin
+        run: |
+          v=$(python -c "import json;print(json.load(open('dims-case.json'))['dimsCore'])")
+          echo "pinned core: $v"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch that release
+        run: |
+          git clone -q --depth 1 --branch "v${{ steps.pin.outputs.version }}" \
+            "https://github.com/${{ inputs.core_repo }}.git" /tmp/core
+
+      - name: Compare
+        run: |
+          diff -r --brief /tmp/core/packages/dims-core "${{ inputs.vendor_dir }}" && {
+            echo "vendored core matches v${{ steps.pin.outputs.version }} exactly"; exit 0; }
+          echo "::error::${{ inputs.vendor_dir }} does not match dims-core v${{ steps.pin.outputs.version }}."
+          echo "::error::Never edit vendored code. Fix it in ${{ inputs.core_repo }} and bump dimsCore."
+          exit 1
