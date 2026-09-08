@@ -6,7 +6,13 @@ social-interaction research.**
 A DIMS dashboard puts video, time series, transcripts and annotations in one
 place, against one shared clock, so that qualitative and quantitative readings
 of an interaction can sit beside each other — recurrence quantification,
-cross-wavelet coherence and ELAN annotations included.
+cross-recurrence, cross-wavelet coherence, a cross-effector network and ELAN
+annotations included. Coherence is read against a chance level estimated by
+simulation: two unrelated signals score about 0.25, not 0, so a number without
+that comparison cannot be interpreted.
+
+The core is released as one version that everything else pins. The current one
+is **[v1.0.1](https://github.com/dims-network/dims/releases/tag/v1.0.1)**.
 
 🌐 **[dims-network.github.io](https://dims-network.github.io/)** ·
 📘 **[Documentation](https://dims-network.github.io/docs/)** ·
@@ -23,7 +29,8 @@ verified against the release in CI, so a study can never quietly fork.
 | | | |
 |---|---|---|
 | [**dims**](https://github.com/dims-network/dims) | the core — dashboard, tabs, Python analyses, no-code builder | everything else pins a release of this |
-| [**case-demo**](https://github.com/dims-network/case-demo) | the reference study, with real data | [live](https://dims-network.github.io/case-demo/) |
+| [**case-demo**](https://github.com/dims-network/case-demo) | the reference study, with real data — rebuilt on each release | [live](https://dims-network.github.io/case-demo/) |
+| [**dims-dashboard-demo**](https://github.com/dims-network/dims-dashboard-demo) | the same study, frozen at 1.0.0 and self-contained: it opens with no network and does not move | [live](https://dims-network.github.io/dims-dashboard-demo/) |
 | [**case-ortho**](https://github.com/dims-network/case-ortho) | ORTHO — a two-person tabletop game | [live](https://dims-network.github.io/case-ortho/) |
 | **case-karnatak** | Karnatak music lessons | private: the recordings are identifiable |
 | [**dims-network.github.io**](https://github.com/dims-network/dims-network.github.io) | the site, generated from the core's markdown | |
@@ -36,14 +43,16 @@ and do not pin the core.
 ## Why it looks like this
 
 The code used to live in five repositories kept in step by hand. They were not:
-three disjoint git lineages, four copies of the frontend between 2136 and 2500
+three disjoint git lineages, four copies of the frontend between 2150 and 2514
 lines, and **no repository that contained every feature**. One fork carried the
 only correct wavelet coherence for months while the others shipped a version
 that tracked signal power instead — because there was no mechanism for a fix to
 travel.
 
 Propagation is now a version bump. The earlier repositories are archived and
-kept read-only for provenance.
+private: their history is kept, but they are closed rather than published, and
+old links into them will not resolve. Each has been superseded by one of the
+repositories above.
 
 ## Working with human-subject data
 
@@ -56,9 +65,8 @@ in a public repository. See
 
 ## Contributing
 
-Issues labelled **`agent-ready`** name the files, link the contract and state
-the acceptance check. Both human and automated contributors are welcome to take
-them. Start from
+Issues labelled **`ready`** name the files, link the contract and state the
+acceptance check, so one can be picked up without any other context. Start from
 [the core's README](https://github.com/dims-network/dims#working-on-dims), a map
 telling you which single document to read for the task you have.
 
