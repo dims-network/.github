@@ -11,13 +11,6 @@ annotations included. Coherence is read against a chance level estimated by
 simulation: two unrelated signals score about 0.25, not 0, so a number without
 that comparison cannot be interpreted.
 
-The core is released as one version that everything else pins. The current one
-is **[v1.0.1](https://github.com/dims-network/dims/releases/tag/v1.0.1)**.
-
-🌐 **[dims-network.github.io](https://dims-network.github.io/)** ·
-📘 **[Documentation](https://dims-network.github.io/docs/)** ·
-🚀 **[Getting started](https://dims-network.github.io/docs/getting-started.html)**
-
 ---
 
 ## How it is organised
@@ -35,24 +28,8 @@ verified against the release in CI, so a study can never quietly fork.
 | **case-karnatak** | Karnatak music lessons | private: the recordings are identifiable |
 | [**dims-network.github.io**](https://github.com/dims-network/dims-network.github.io) | the site, generated from the core's markdown | |
 
-Separately, [**bots-viewer**](https://github.com/dims-network/bots-viewer) and
-[**Ortho-viewer**](https://github.com/dims-network/Ortho-viewer) are Dash
-applications for browsing many game sessions at once. They are not dashboards
-and do not pin the core.
 
-## Why it looks like this
 
-The code used to live in five repositories kept in step by hand. They were not:
-three disjoint git lineages, four copies of the frontend between 2150 and 2514
-lines, and **no repository that contained every feature**. One fork carried the
-only correct wavelet coherence for months while the others shipped a version
-that tracked signal power instead — because there was no mechanism for a fix to
-travel.
-
-Propagation is now a version bump. The earlier repositories are archived and
-private: their history is kept, but they are closed rather than published, and
-old links into them will not resolve. Each has been superseded by one of the
-repositories above.
 
 ## Working with human-subject data
 
